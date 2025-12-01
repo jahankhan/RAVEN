@@ -72,6 +72,7 @@ def get_mask(entity_bbox, entity_type, entity_size, entity_angle):
     dummy_entity.color = Bunch(get_value=lambda : 0)
     dummy_entity.angle = Bunch(get_value=lambda : entity_angle)
     mask = render_entity(dummy_entity) / 255
+    #print(mask.shape)
     return mask
 
 
@@ -82,11 +83,20 @@ def rle_encode(img):
     img: numpy array, 1 - mask, 0 - background
     Returns run length as string formated
     '''
-    pixels = img.flatten()
+    pixels = (img > 0.5).flatten() 
+    # --- FIX END ---
+    
+    # We generally pad with False (0) to detect edge transitions
     pixels = np.concatenate([[0], pixels, [0]])
+    
+    # Find where the value changes
     runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
+    
+    # Calculate lengths (End Index - Start Index)
     runs[1::2] -= runs[::2]
-    return "[" + ",".join(str(x) for x in runs) + "]"
+    result = "[" + ",".join(str(x) for x in runs) + "]"
+
+    return result
  
 
 def rle_decode(mask_rle, shape):
